@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Какая IT-профессия тебе подходит?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 1000px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  h1 { color: #333; margin-bottom: 10px; font-size: 28px; }
+  .subtitle { color: #666; margin-bottom: 30px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { outline: none; border-color: #667eea; }
+  .progress {
+    background: #eee;
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .question { font-size: 20px; margin-bottom: 20px; color: #333; font-weight: 600; }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option {
+    background: #f5f7ff;
+    border: 2px solid transparent;
+    padding: 16px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    font-size: 16px;
+    color: #333;
+  }
+  .option:hover { background: #e8ecff; border-color: #667eea; transform: translateX(5px); }
+  .result { text-align: center; }
+  .result-emoji { font-size: 100px; margin-bottom: 20px; }
+  .result-image {
+    width: 100%;
+    max-width: 600px;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 15px;
+    margin-bottom: 20px;
+  }
+  .result-title { font-size: 32px; color: #764ba2; margin-bottom: 15px; }
+  .result-desc { font-size: 17px; color: #555; line-height: 1.6; margin-bottom: 25px; }
+  .btn {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .btn:hover { transform: scale(1.05); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .hidden { display: none; }
+  .error { color: #e74c3c; font-size: 14px; margin-top: 5px; }
+
+  .result-phosagro {
+    background: #ffffff;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: flex-start; /* Выравнивание по верху */
+    gap: 15px; /* Расстояние между логотипом и текстом */
+  }
+
+  .phosagro-logo {
+    width: 200px;
+    height: auto;
+    flex-shrink: 0; /* Логотип не сжимается */
+  }
+
+  .phosagro-text {
+    color: #43b02a;
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: left;
+    flex: 1; /* Текст занимает всё доступное место */
+  }
+
+  .phosagro-text b {
+    color: #003387;
+    font-weight: 700;
+  }
+
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Экран ввода имени -->
+  <div id="name-screen">
+    <h1>🧠 Какая IT-профессия тебе подходит?</h1>
+    <p class="subtitle">Ответь на 5 вопросов и узнай свою профессию</p>
+    <div class="form-group">
+      <label for="name">Имя *</label>
+      <input type="text" id="name" placeholder="Введи своё имя" required>
+      <div class="error hidden" id="name-error">Пожалуйста, введи имя</div>
+    </div>
+    <div class="form-group">
+      <label for="surname">Фамилия *</label>
+      <input type="text" id="surname" placeholder="Введи свою фамилию" required>
+      <div class="error hidden" id="surname-error">Пожалуйста, введи фамилию</div>
+    </div>
+    <button class="btn" onclick="startQuiz()">Начать тест</button>
+  </div>
+
+  <!-- Экран теста -->
+  <div id="quiz-screen" class="hidden">
+    <div class="progress"><div class="progress-bar" id="progress"></div></div>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+  </div>
+
+    <!-- Экран результата -->
+  <div id="result-screen" class="result hidden">
+    <div class="result-emoji" id="result-emoji"></div>
+    <img class="result-image" id="result-image" alt="Профессия">
+    <div class="result-title" id="result-title"></div>
+    <div class="result-desc" id="result-desc"></div>
+    
+    <!-- НОВЫЙ БЛОК ДЛЯ ФОСАГРО -->
+    <div class="result-phosagro" id="result-phosagro">
+      <img src="phosagro-logo.png" alt="ФосАгро" class="phosagro-logo">
+      <div class="phosagro-text" id="phosagro-text"></div>
+    </div>
+    
+    <button class="btn" onclick="restart()">Пройти ещё раз</button>
+  </div>
+</div>
+
+<script>
+// ВАЖНО: Замените на URL вашего Google Apps Script
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcMfMLpehaoU2zA_Yeb2lTVVgKssV8epjgmcngM8bTUEvGz8eaNWIJA2ZmRAcbSZVQig/exec";
+
+const questions = [
+  {
+    q: "1. Тебе поручили организовать школьный проект. Какую роль возьмёшь?",
+    options: [
+      { letter: "A", text: "🎨 Сделаю красивый план и презентабельные слайды, чтобы всем было понятно и удобно" },
+      { letter: "Б", text: "📋 Соберу все идеи, задам кучу вопросов и превращу хаос в чёткий план" },
+      { letter: "В", text: "🔍 Проверю всё на прочность: найду логические дыры, проверю микрофон и свет" },
+      { letter: "Г", text: "📊 Соберу статистику и рассчитаю математически идеальный вариант" },
+      { letter: "Д", text: "⚙️ Настрою общий чат, документы и автоматизирую рассылку напоминаний" },
+      { letter: "Е", text: "🛡️ Установлю пароли, предупрежу о фишинге и прослежу, чтобы инфа не ушла" }
+    ]
+  },
+  {
+    q: "2. Твоё любимое приложение начало глючить. Первая мысль?",
+    options: [
+      { letter: "A", text: "Какой ужасный интерфейс! Кто спрятал кнопку 'Закрыть'? Я бы сделал удобнее" },
+      { letter: "Б", text: "Интересно, баг или фича? А что будет, если нажать кнопку 20 раз подряд?" },
+      { letter: "В", text: "Надо понять, в какой момент происходит сбой, и чётко это описать" },
+      { letter: "Г", text: "Интересно, какой алгоритм сломался? Хочу посмотреть на исходные данные" },
+      { letter: "Д", text: "Очевидно, упал сервер или сломался пайплайн. Разрабы что-то не протестировали" },
+      { letter: "Е", text: "Система уязвима к взлому! Надо проверить разрешения и сменить пароль" }
+    ]
+  },
+  {
+    q: "3. Какой предмет тебе даётся легче всего?",
+    options: [
+      { letter: "A", text: "ИЗО, литература или психология - я чувствую людей и умею красиво оформить" },
+      { letter: "Б", text: "Обществознание или языки - я структурирую информацию и пишу чёткие инструкции" },
+      { letter: "В", text: "Любой предмет, где можно найти ошибку в учебнике - я внимателен к деталям" },
+      { letter: "Г", text: "Математика и статистика - обожаю искать закономерности в цифрах" },
+      { letter: "Д", text: "Информатика и физика - люблю писать скрипты, которые делают рутину за меня" },
+      { letter: "Е", text: "Чиню Wi-Fi дома, настраиваю защиту роутера и читаю про хакеров" }
+    ]
+  },
+  {
+    q: "4. Какую 'суперсилу' выбрал бы для работы?",
+    options: [
+      { letter: "A", text: "Мгновенно видеть, как сделать любую систему интуитивно понятной" },
+      { letter: "Б", text: "Превращать хаос в чёткие структурированные требования и схемы" },
+      { letter: "В", text: "Находить одну крошечную ошибку в миллионе строк кода" },
+      { letter: "Г", text: "Предсказывать будущее, анализируя прошлое с помощью математики" },
+      { letter: "Д", text: "Заставить любую скучную задачу выполняться сама собой" },
+      { letter: "Е", text: "Мыслить как злоумышленник, чтобы закрыть все бреши в защите" }
+    ]
+  },
+  {
+    q: "5. Как ведёшь себя в новой компьютерной игре?",
+    options: [
+      { letter: "A", text: "Долго настраиваю интерфейс, чтобы всё было красиво и под рукой" },
+      { letter: "Б", text: "Изучаю лор, сюжет и правила мира, чтобы понять логику разработчиков" },
+      { letter: "В", text: "Сразу ищу баги, пытаюсь пройти сквозь текстуры или сломать экономику" },
+      { letter: "Г", text: "Анализирую шансы выпадения предметов и ищу математически идеальный билд" },
+      { letter: "Д", text: "Думаю, как сервера выдерживают миллионы игроков одновременно" },
+      { letter: "Е", text: "Проверяю, не требует ли игра лишних прав, и не взламывали ли её" }
+    ]
+  }
+];
+
+const results = {
+  "A": {
+    title: "UX/UI-дизайнер",
+    image: "images/1.jpg",
+    desc: "Твоя суперсила - эмпатия и вкус. Ты понимаешь, как думают люди, и ненавидишь неудобные вещи. Тебе не обязательно быть крутым программистом, но ты должен уметь работать в Figma, знать основы композиции и психологии восприятия. Твоя цель - делать технологии человечными.",
+    phosagro: "<b>В ФосАгро:</b> Твои навыки проектирования удобных систем будут востребованы на позиции <b>Специалиста по развитию систем планирования и проектирования</b> или <b>Специалиста по работе с ИТ-проектами</b>. Крупному холдингу критически важно, чтобы внутренние программы были понятными и эффективными для тысяч сотрудников."
+  },
+  "Б": {
+    title: "Системный аналитик",
+    image: "images/2.jpg",
+    desc: "Ты - переводчик с 'языка хаоса' на 'язык порядка'. Ты любишь задавать вопрос 'Зачем?', структурировать информацию и рисовать схемы. Тебе подойдут навыки написания ТЗ, знание нотаций (BPMN, UML) и базовый SQL. Ты - мозг, который планирует, как система должна работать.",
+    phosagro: "<b>В ФосАгро:</b> Твой талант структурировать процессы идеален для роли <b>Специалиста по автоматизированным системам управления технологическими процессами (АСУ ТП)</b> или <b>Специалиста по администрированию</b>. Ты сможешь переводить сложные производственные задачи на язык четких технических требований."
+  },
+  "В": {
+    title: "QA-инженер (Тестировщик)",
+    image: "images/3.jpg",
+    desc: "Твой конёк - здоровый скептицизм и внимание к деталям. Ты не веришь, что 'и так сойдёт', и всегда проверяешь граничные условия. Тебе не нужно писать сложный код с нуля, но нужно уметь чётко описывать баги и знать жизненный цикл ПО.",
+    phosagro: "<b>В ФосАгро:</b> Твоя внимательность сделает тебя отличным <b>Специалистом по нормоконтролю</b> или <b>Специалистом по мониторингу производственных процессов</b>. Проверка систем на ошибки и соответствие стандартам - это то, что обеспечивает безопасность и бесперебойную работу огромного предприятия."
+  },
+  "Г": {
+    title: "Data Scientist",
+    image: "images/4.jpg",
+    desc: "Ты видишь мир как набор данных, из которых можно извлечь пользу. Ты любишь математику, статистику и не боишься сложных задач. Твои главные инструменты: Python, SQL, библиотеки для анализа данных и машинного обучения. Ты тот, кто заставляет нейросети работать на бизнес.",
+    phosagro: "<b>В ФосАгро:</b> Компания активно использует большие данные для оптимизации логистики и добычи. Твои навыки приведут тебя к роли <b>Специалиста по аналитической работе</b>. Ты сможешь находить скрытые закономерности в данных, чтобы делать работу предприятия эффективнее и экономичнее."
+  },
+  "Д": {
+    title: "DevOps-инженер",
+    image: "images/5.jpg",
+    desc: "Ты ненавидишь делать одно и то же дважды. Если задачу можно автоматизировать - ты напишешь скрипт. Ты любишь разбираться, как код попадает с компьютера разработчика на мощный сервер. Тебе нужны Linux, Docker, CI/CD и стальные нервы.",
+    phosagro: "<b>В ФосАгро:</b> Твое стремление к автоматизации очень ценится на позициях <b>Специалиста по сетям связи</b>, <b>Инженера-программиста</b> или <b>Специалиста по защите сетей</b>. Ты обеспечишь стабильную, быструю и бесперебойную работу IT-инфраструктуры заводов."
+  },
+  "Е": {
+    title: "Специалист по кибербезопасности",
+    image: "images/6.jpg",
+    desc: "Ты параноик, но в хорошем, профессиональном смысле. Ты всегда думаешь: 'А как это можно взломать?'. Тебе интересно разбираться в сетях, операционных системах, криптографии и методах социальной инженерии. Ты - цифровой страж.",
+    phosagro: "<b>В ФосАгро:</b> Для крупного промышленного холдинга защита данных - приоритет №1. Твои навыки на 100% соответствуют роли <b>Специалиста по защите сетей</b>. Ты будешь тем самым цифровым щитом, который не даст злоумышленникам нарушить работу критически важных систем."
+  }
+};
+
+let currentQ = 0;
+let scores = { "A":0, "Б":0, "В":0, "Г":0, "Д":0, "Е":0 };
+let userName = "";
+let userSurname = "";
+let userAnswers = [];
+
+function startQuiz() {
+  const name = document.getElementById("name").value.trim();
+  const surname = document.getElementById("surname").value.trim();
+  
+  let hasError = false;
+  
+  if (!name) {
+    document.getElementById("name-error").classList.remove("hidden");
+    hasError = true;
+  } else {
+    document.getElementById("name-error").classList.add("hidden");
+  }
+  
+  if (!surname) {
+    document.getElementById("surname-error").classList.remove("hidden");
+    hasError = true;
+  } else {
+    document.getElementById("surname-error").classList.add("hidden");
+  }
+  
+  if (hasError) return;
+  
+  userName = name;
+  userSurname = surname;
+  
+  document.getElementById("name-screen").classList.add("hidden");
+  document.getElementById("quiz-screen").classList.remove("hidden");
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[currentQ];
+  document.getElementById("question").textContent = q.q;
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+  q.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = opt.text;
+    btn.onclick = () => selectOption(opt.letter);
+    optionsDiv.appendChild(btn);
+  });
+  document.getElementById("progress").style.width = ((currentQ) / questions.length * 100) + "%";
+}
+
+function selectOption(letter) {
+  scores[letter]++;
+  userAnswers.push({ question: currentQ + 1, answer: letter });
+  currentQ++;
+  if (currentQ < questions.length) {
+    showQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById("progress").style.width = "100%";
+  let maxLetter = "A";
+  for (let l in scores) {
+    if (scores[l] > scores[maxLetter]) maxLetter = l;
+  }
+  const r = results[maxLetter];
+
+  document.getElementById("result-emoji").textContent = r.emoji || ""; // На случай, если эмодзи убрали
+  document.getElementById("result-image").src = r.image;
+  document.getElementById("result-title").textContent = r.title;
+  document.getElementById("result-desc").textContent = r.desc;
+  
+  // ДОБАВЛЯЕМ ЭТУ СТРОКУ:
+  document.getElementById("phosagro-text").innerHTML = r.phosagro;
+  
+  document.getElementById("quiz-screen").classList.add("hidden");
+  document.getElementById("result-screen").classList.remove("hidden");
+  
+  sendToGoogleSheets(userName, userSurname, r.title, userAnswers);
+}
+
+function sendToGoogleSheets(name, surname, profession, answers) {
+  const data = {
+    name: name,
+    surname: surname,
+    profession: profession,
+    answers: answers
+  };
+  
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  }).catch(error => {
+    console.error('Ошибка отправки:', error);
+  });
+}
+
+function restart() {
+  currentQ = 0;
+  scores = { "A":0, "Б":0, "В":0, "Г":0, "Д":0, "Е":0 };
+  userAnswers = [];
+  document.getElementById("name-screen").classList.remove("hidden");
+  document.getElementById("result-screen").classList.add("hidden");
+  document.getElementById("name").value = "";
+  document.getElementById("surname").value = "";
+}
+</script>
+</body>
+</html>
